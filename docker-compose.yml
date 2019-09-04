@@ -1,0 +1,45 @@
+version: '2'
+
+volumes:
+
+  gobarber-postgres-data:
+    driver: local
+
+  gobarber-mysql-data:
+    driver: local
+
+  gobarber-redis-data:
+    driver: local
+
+services:
+  # Postgres (10.3)
+  postgres:
+    image: postgres:10.3
+    container_name: gobarber-postgres
+    volumes:
+    - gobarber-postgres-data:/var/lib/postgresql/data
+    ports:
+    - "5432:5432"
+    environment:
+    - POSTGRES_PASSWORD=gobarber
+    - POSTGRES_DB=gobarber
+    - POSTGRES_USER=gobarber
+
+  # MONGODB
+  mongo:
+    image: mongo:latest
+    container_name: gobarber-mongo
+    volumes:
+      - gobarber-mysql-data:/var/lib/mysql
+    ports:
+      - "27017:27017"
+
+  # REDIS (5.7)
+  cache:
+    image: redis:4.0
+    container_name: gobarber-redis
+    command: --appendonly yes
+    volumes:
+      - gobarber-redis-data:/data
+    ports:
+      - "6379:6379"
