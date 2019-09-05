@@ -35,10 +35,9 @@ services:
       - "27017:27017"
 
   # REDIS (5.7)
-  cache:
-    image: redis:4.0
+  queue:
+    image: redis:alpine
     container_name: gobarber-redis
-    command: --appendonly yes
     volumes:
       - gobarber-redis-data:/data
     ports:
