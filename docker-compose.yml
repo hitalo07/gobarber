@@ -1,44 +1,57 @@
-version: '2'
-
-volumes:
-
-  gobarber-postgres-data:
-    driver: local
-
-  gobarber-mysql-data:
-    driver: local
-
-  gobarber-redis-data:
-    driver: local
+version: '3'
 
 services:
-  # Postgres (10.3)
   postgres:
-    image: postgres:10.3
-    container_name: gobarber-postgres
-    volumes:
-    - gobarber-postgres-data:/var/lib/postgresql/data
+    image: postgres:alpine
     ports:
-    - "5432:5432"
+      - "5432:5432"
     environment:
-    - POSTGRES_PASSWORD=gobarber
-    - POSTGRES_DB=gobarber
-    - POSTGRES_USER=gobarber
-
-  # MONGODB
-  mongo:
-    image: mongo:latest
-    container_name: gobarber-mongo
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASS}
+      - POSTGRES_DB=${DB_NAME}
     volumes:
-      - gobarber-mysql-data:/var/lib/mysql
-    ports:
-      - "27017:27017"
+      - postgres_data:/var/lib/postgresql/data
 
-  # REDIS (5.7)
-  queue:
+  redis:
     image: redis:alpine
-    container_name: gobarber-redis
-    volumes:
-      - gobarber-redis-data:/data
+
+  mongo:
+    image: mongo
+
+  app:
+    build: .
     ports:
-      - "6379:6379"
+      - "3333:3333"
+    command: yarn dev
+    environment:
+      - DB_HOST=postgres
+      - MONGO_HOST=mongo
+      - REDIS_HOST=redis
+      - MAIL_HOST=mailhog
+      - MAIL_PORT=1025
+      - MAIL_USER=
+      - MAIL_PASS=
+    volumes:
+      - ".:/usr/app"
+
+  queue:
+    build: .
+    command: yarn queue
+    environment:
+      - DB_HOST=postgres
+      - MONGO_HOST=mongo
+      - REDIS_HOST=redis
+      - MAIL_HOST=mailhog
+      - MAIL_PORT=1025
+      - MAIL_USER=
+      - MAIL_PASS=
+    volumes:
+      - ".:/usr/app"
+
+  mailhog:
+    image: mailhog/mailhog
+    ports:
+      - 8025:8025
+
+volumes:
+  postgres_data:
